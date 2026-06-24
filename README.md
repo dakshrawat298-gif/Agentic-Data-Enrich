@@ -1,8 +1,8 @@
 # Agentic Data-Enrichment Protocol — Phase 1 MVP
 
-> A two-agent protocol where an **LLM Worker** performs fuzzy extraction of messy data, a **deterministic Master** verifies the output shape with no LLM in the loop, and an on-chain **Settlement contract** executes an x402-style ERC-20 micro-payment to the Worker's on-chain identity. Built and verified on **Base Sepolia** testnet.
+> A protocol where an **LLM Worker** performs fuzzy extraction of messy data and a **deterministic Master** verifies the output shape with no LLM in the loop, after which an on-chain **Settlement contract** executes an x402-style ERC-20 micro-payment to the Worker's on-chain identity. The Worker and Master are **not** independent networked services — they run **sequentially inside a single Node process**. Built and verified on **Base Sepolia** testnet.
 
-This is an honest **Phase 1 MVP**. It demonstrates a working end-to-end loop — real LLM enrichment, real deterministic gating, and real on-chain value transfer with replay protection — using deliberate simplifications (mock token, single operator, off-chain verification). See [§ Honest scope & limitations](#honest-scope--limitations) for exactly what is real versus simplified. A full execution-level audit lives in [`notebookllm_audit_report.md`](./notebookllm_audit_report.md).
+This is an honest **Phase 1 MVP**. It demonstrates a working end-to-end loop — real LLM enrichment, real deterministic gating, and real on-chain value transfer with replay protection — using deliberate simplifications (mock token, single operator, off-chain verification). See [§ Honest scope & limitations](#honest-scope--limitations) for exactly what is real versus simplified. A full execution-level audit lives in [`agent-protocol/notebookllm_audit_report.md`](./agent-protocol/notebookllm_audit_report.md).
 
 ---
 
@@ -38,6 +38,8 @@ The core thesis is a clean split between **fuzzy work**, **deterministic gating*
 **Why this separation matters:** the expensive/unreliable component (the LLM) is isolated to extraction only. The money gate is a deterministic, auditable code path with no model in it. The blockchain provides tamper-evident finality, replay protection, and a public audit log of every payment — it does **not** itself judge the work (verification is off-chain; see limitations).
 
 ### Repository layout
+
+All protocol code lives in the `agent-protocol/` package (paths below are relative to it).
 
 | Path | Responsibility |
 |------|----------------|
@@ -90,7 +92,7 @@ The trade-off is honest: **no built-in test suite, no local fork testing, no gas
 
 ---
 
-## Base Sepolia testnet proof
+## Base Sepolia Testnet Proof
 
 **Real, verifiable on-chain data** (chainId `84532`). All transactions are settlement calls from the Master to the `Settlement` contract, each confirmed with `status: success` and emitting an ERC-20 `Transfer` + a `JobSettled` event.
 
@@ -192,4 +194,4 @@ This is a Phase 1 MVP. What is **real and verifiable on-chain**: contract deploy
 - **Identities are unauthenticated.** `register` is permissionless and not bound to `msg.sender`.
 - **Contracts are not source-verified on Basescan** — bytecode and transactions are public, but the source is not published on the explorer.
 
-For the full execution-level teardown with on-chain evidence, see [`notebookllm_audit_report.md`](./notebookllm_audit_report.md).
+For the full execution-level teardown with on-chain evidence, see [`agent-protocol/notebookllm_audit_report.md`](./agent-protocol/notebookllm_audit_report.md).
