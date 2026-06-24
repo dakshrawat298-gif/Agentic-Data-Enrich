@@ -1,3 +1,15 @@
 node_modules
 build
+
+# Deployment artifact — contains the Worker's private key. NEVER commit.
 deployed-addresses.json
+
+# Secrets / env / keys — defensive: never commit any of these
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.keystore
+secrets.json
+**/*private*key*
