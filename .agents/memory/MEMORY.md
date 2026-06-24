@@ -1,2 +1,0 @@
-- [Base Sepolia RPC read lag](base-sepolia-rpc-read-lag.md) — public sepolia.base.org returns stale/zero state right after a write; retry read-backs.
-- [solc+viem over Hardhat](solc-viem-over-hardhat.md) — on mobile Replit, compile with solc-js + deploy with viem; avoid Hardhat's heavy toolchain and persistent node.
