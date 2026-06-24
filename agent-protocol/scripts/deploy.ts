@@ -34,7 +34,18 @@ async function deploy(name: string, args: unknown[] = []): Promise<`0x${string}`
 
 async function send(address: `0x${string}`, abi: Abi, functionName: string, args: unknown[]): Promise<void> {
   const hash = await wallet.writeContract({ address, abi, functionName, args, account: master, chain: baseSepolia });
-  await publicClient.waitForTransactionReceipt({ hash });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error(`${functionName} reverted (tx ${hash})`);
+}
+
+/** Read an agentId, retrying to tolerate public-RPC read lag right after a write. */
+async function readAgentId(registry: `0x${string}`, abi: Abi, agent: `0x${string}`): Promise<bigint> {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const id = (await publicClient.readContract({ address: registry, abi, functionName: "agentId", args: [agent] })) as bigint;
+    if (id !== 0n) return id;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  throw new Error(`agentId for ${agent} still 0 after retries`);
 }
 
 const balance = await publicClient.getBalance({ address: master.address });
@@ -60,18 +71,8 @@ const worker = privateKeyToAccount(workerKey);
 await send(registryAddr, registryAbi, "register", [master.address, "master.goat.local"]);
 await send(registryAddr, registryAbi, "register", [worker.address, "worker.goat.local"]);
 
-const masterAgentId = (await publicClient.readContract({
-  address: registryAddr,
-  abi: registryAbi,
-  functionName: "agentId",
-  args: [master.address],
-})) as bigint;
-const workerAgentId = (await publicClient.readContract({
-  address: registryAddr,
-  abi: registryAbi,
-  functionName: "agentId",
-  args: [worker.address],
-})) as bigint;
+const masterAgentId = await readAgentId(registryAddr, registryAbi, master.address);
+const workerAgentId = await readAgentId(registryAddr, registryAbi, worker.address);
 
 const MINT = 1000n * 10n ** 6n; // 1000 mUSDC
 const MAX = 2n ** 256n - 1n;

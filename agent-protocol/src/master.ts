@@ -41,7 +41,10 @@ export async function settle(jobLabel: string): Promise<SettlementResult> {
     account: master,
     chain: baseSepolia,
   });
-  await publicClient.waitForTransactionReceipt({ hash });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") {
+    throw new Error(`settlement reverted on-chain (tx ${hash})`);
+  }
 
   return { simulated: false, amount, worker: deployment.worker.address, txHash: hash, explorerUrl: EXPLORER + hash };
 }
